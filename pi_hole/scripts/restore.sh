@@ -55,3 +55,4 @@ rm -rf "$RESTORE_DIR"
 
 echo "Pi-hole restore completed successfully!"
 echo "Please verify service is running: docker compose ps"
+
