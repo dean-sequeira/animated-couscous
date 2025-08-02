@@ -154,6 +154,6 @@ sudo netstat -tlnp
 
 After completing this setup:
 1. Follow service-specific setup instructions
-2. Configure network topology (see network-setup.md)
+2. Configure network topology (see 02-network-setup.md)
 3. Deploy services using Docker Compose
 4. Set up monitoring and alerts
