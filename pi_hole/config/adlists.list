@@ -1,0 +1,21 @@
+# Additional blocklists for Pi-hole
+# These will be imported during Pi-hole setup
+
+# StevenBlack's unified hosts file (recommended baseline)
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+
+# Malware domains
+https://mirror1.malwaredomains.com/files/justdomains
+
+# Disconnect.me tracking protection
+https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
+
+# AdGuard mobile ads filter
+https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/master/MobileFilter/sections/adservers.txt
+
+# EasyList (web ads)
+https://easylist.to/easylist/easylist.txt
+
+# Additional recommended lists (uncomment as needed)
+# https://someonewhocares.org/hosts/zero/hosts
+# https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/master/SpywareFilter/sections/spyware_ublock.txt

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+    environment:
+      TZ: ${TZ:-America/New_York}
+      WEBPASSWORD: ${PIHOLE_PASSWORD}
+      SERVERIP: ${SERVER_IP}
+      DNS1: ${DNS1:-1.1.1.1}
+      DNS2: ${DNS2:-1.0.0.1}
+      DNSMASQ_LISTENING: ${DNSMASQ_LISTENING:-local}
+      DNSMASQ_USER: pihole
+      INTERFACE: ${INTERFACE:-eth0}
+      VIRTUAL_HOST: ${VIRTUAL_HOST:-pihole.local}
+      IPv6: ${IPV6:-false}
+      TEMPERATUREUNIT: ${TEMPERATURE_UNIT:-c}
+      WEBUIBOXEDLAYOUT: traditional
+      REV_SERVER: ${REV_SERVER:-false}
+      REV_SERVER_TARGET: ${REV_SERVER_TARGET:-192.168.1.1}
+      REV_SERVER_DOMAIN: ${REV_SERVER_DOMAIN:-local}
+      REV_SERVER_CIDR: ${REV_SERVER_CIDR:-192.168.1.0/24}
+    volumes:
+      - ./config/etc-pihole:/etc/pihole
+      - ./config/etc-dnsmasq.d:/etc/dnsmasq.d
+      - ./config/custom.list:/etc/pihole/custom.list:ro
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      - pihole_network
+    healthcheck:
+      test: ["CMD", "dig", "@127.0.0.1", "google.com"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+
+networks:
+  pihole_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,11 @@
+# Custom DNS entries for local network services
+# Format: IP_ADDRESS HOSTNAME
+
+# Local service hostnames
+192.168.1.10 pihole.local
+192.168.1.11 monitoring.local grafana.local ntopng.local
+192.168.1.12 apps.local streamlit.local
+
+# Example additional local services
+# 192.168.1.20 nas.local
+# 192.168.1.21 homeassistant.local
