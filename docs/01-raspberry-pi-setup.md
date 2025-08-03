@@ -6,6 +6,7 @@ This document provides step-by-step instructions for configuring Raspberry Pi de
 
 - Raspberry Pi 4 (4GB RAM minimum recommended)
 - MicroSD card (32GB+ Class 10)
+- **250GB SATA SSD with mSATA to USB adapter**
 - Ethernet cable
 - Power supply (official Pi adapter recommended)
 
@@ -30,7 +31,87 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git vim curl htop ufw fail2ban
 ```
 
-### 3. Docker Setup
+### 3. External SSD Setup
+
+```bash
+# Connect the SSD via USB and identify the device
+lsblk
+# Look for your SSD (usually /dev/sda or /dev/sdb)
+
+# Check USB devices to confirm SSD is detected
+lsusb
+
+# Install required tools for disk management
+sudo apt install -y parted
+
+# Partition the SSD (replace /dev/sda with your actual device)
+sudo parted /dev/sda --script mklabel gpt
+sudo parted /dev/sda --script mkpart primary ext4 0% 100%
+
+# Format the partition with ext4 filesystem
+sudo mkfs.ext4 /dev/sda1
+
+# Create mount point for the SSD
+sudo mkdir -p /mnt/storage
+
+# Get the UUID of the SSD partition for persistent mounting
+sudo blkid /dev/sda1
+
+# Add to fstab for automatic mounting on boot
+# Replace YOUR_UUID with the actual UUID from blkid command
+echo "UUID=YOUR_UUID /mnt/storage ext4 defaults,noatime 0 2" | sudo tee -a /etc/fstab
+
+# Mount the SSD
+sudo mount -a
+
+# Verify mount is successful
+df -h | grep storage
+
+# Set proper ownership and permissions
+sudo chown pi:pi /mnt/storage
+sudo chmod 755 /mnt/storage
+
+# Create directories for different services on the SSD
+mkdir -p /mnt/storage/{docker_data,pi_hole_data,grafana_data,streamlit_data,backups}
+
+# Create symlinks for easy access
+ln -s /mnt/storage /home/pi/storage
+```
+
+### 4. Docker Storage Configuration
+
+```bash
+# Stop Docker service
+sudo systemctl stop docker
+
+# Create new Docker data directory on SSD
+sudo mkdir -p /mnt/storage/docker_data
+
+# Copy existing Docker data (if any)
+sudo cp -r /var/lib/docker/* /mnt/storage/docker_data/ 2>/dev/null || true
+
+# Configure Docker to use SSD storage
+sudo mkdir -p /etc/docker
+cat << EOF | sudo tee /etc/docker/daemon.json
+{
+  "data-root": "/mnt/storage/docker_data",
+  "storage-driver": "overlay2",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+EOF
+
+# Start Docker service
+sudo systemctl start docker
+
+# Verify Docker is using new location
+docker info | grep "Docker Root Dir"
+```
+
+### 5. Docker Setup
 ```bash
 # Install Docker using official script (recommended for Pi)
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -51,7 +132,7 @@ docker --version
 docker compose version
 ```
 
-### 4. Static IP Configuration
+### 6. Static IP Configuration
 ```bash
 # Edit dhcpcd.conf for static IP
 sudo nano /etc/dhcpcd.conf
@@ -66,7 +147,7 @@ sudo nano /etc/dhcpcd.conf
 sudo reboot
 ```
 
-### 5. Security Hardening
+### 7. Security Hardening
 ```bash
 # Change default password
 passwd
@@ -83,7 +164,7 @@ sudo systemctl enable fail2ban
 sudo systemctl start fail2ban
 ```
 
-### 6. Repository Setup
+### 8. Repository Setup
 ```bash
 # Clone the project repository
 git clone <your-repo-url> /home/pi/animated-couscous
