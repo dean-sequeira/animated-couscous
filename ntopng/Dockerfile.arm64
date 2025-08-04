@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     autotools-dev \
     autogen \
     automake \
+    libtool \
+    libtoolize \
     pkg-config \
     tar \
     zlib1g-dev \
@@ -36,16 +38,16 @@ RUN useradd -r -s /bin/false ntopng
 WORKDIR /tmp
 RUN git clone https://github.com/ntop/nDPI.git && \
     cd nDPI && \
+    git submodule update --init --recursive && \
     ./autogen.sh && \
-    ./configure && \
     make && \
     make install
 
 # Build and install ntopng
 RUN git clone https://github.com/ntop/ntopng.git && \
     cd ntopng && \
+    git submodule update --init --recursive && \
     ./autogen.sh && \
-    ./configure --with-ndpi-includes=/usr/local/include/ndpi --with-ndpi-libs=/usr/local/lib && \
     make && \
     make install
 
@@ -56,6 +58,25 @@ RUN mkdir -p /var/lib/ntopng /var/log/ntopng && \
 # Update library cache
 RUN ldconfig
 
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    libpcap0.8 \
+    libglib2.0-0 \
+    libgeoip1 \
+    libsqlite3-0 \
+    librrd8 \
+    libcurl4 \
+    libmariadb3 \
+    libssl1.1 \
+    libzmq5 \
+    libhiredis0.14 \
+    libmaxminddb0 \
+    libjson-c5 \
+    libldap-2.4-2 \
+    libexpat1 \
+    libradcli4 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Clean up build dependencies to reduce image size
 RUN apt-get remove -y \
     build-essential \
@@ -63,10 +84,11 @@ RUN apt-get remove -y \
     autotools-dev \
     autogen \
     automake \
+    libtool \
     pkg-config \
     && apt-get autoremove -y \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && rm -rf /tmp/*
 
 # Set working directory
 WORKDIR /var/lib/ntopng
