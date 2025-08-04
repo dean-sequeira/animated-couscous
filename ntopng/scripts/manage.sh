@@ -31,7 +31,7 @@ start_service() {
     # Check if requirements are installed
     if ! python3 -c "import streamlit, psutil, pandas, plotly" 2>/dev/null; then
         log_info "Installing dependencies..."
-        pip3 install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+        pip install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
     fi
 
     # Start the Streamlit app
@@ -70,7 +70,7 @@ show_help() {
 
 install_deps() {
     log_info "Installing Network Monitor dependencies..."
-    pip3 install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+    pip install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
     log_info "Dependencies installed successfully"
 }
 
