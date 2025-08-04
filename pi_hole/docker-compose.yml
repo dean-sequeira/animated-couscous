@@ -22,18 +22,24 @@ services:
       TEMPERATUREUNIT: ${TEMPERATURE_UNIT:-c}
       WEBUIBOXEDLAYOUT: traditional
       REV_SERVER: ${REV_SERVER:-false}
-      REV_SERVER_TARGET: ${REV_SERVER_TARGET:-192.168.1.1}
+      REV_SERVER_TARGET: ${REV_SERVER_TARGET:-192.168.3.1}
       REV_SERVER_DOMAIN: ${REV_SERVER_DOMAIN:-local}
-      REV_SERVER_CIDR: ${REV_SERVER_CIDR:-192.168.1.0/24}
+      REV_SERVER_CIDR: ${REV_SERVER_CIDR:-192.168.3.0/24}
+      DNSSEC: ${DNSSEC:-true}
+      CONDITIONAL_FORWARDING: ${CONDITIONAL_FORWARDING:-true}
+      CONDITIONAL_FORWARDING_IP: ${CONDITIONAL_FORWARDING_IP:-192.168.3.1}
+      CONDITIONAL_FORWARDING_DOMAIN: ${CONDITIONAL_FORWARDING_DOMAIN:-local}
+      CONDITIONAL_FORWARDING_REVERSE: ${CONDITIONAL_FORWARDING_REVERSE:-3.168.192.in-addr.arpa}
     volumes:
-      - ./config/etc-pihole:/etc/pihole
-      - ./config/etc-dnsmasq.d:/etc/dnsmasq.d
+      - /mnt/storage/pi_hole_data/etc-pihole:/etc/pihole
+      - /mnt/storage/pi_hole_data/etc-dnsmasq.d:/etc/dnsmasq.d
       - ./config/custom.list:/etc/pihole/custom.list:ro
+      - ./config/adlists.list:/etc/pihole/adlists.list:ro
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
     networks:
-      - pihole_network
+      - monitoring_network
     healthcheck:
       test: ["CMD", "dig", "@127.0.0.1", "google.com"]
       interval: 30s
@@ -43,9 +49,15 @@ services:
     dns:
       - 127.0.0.1
       - 1.1.1.1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
-  pihole_network:
+  monitoring_network:
+    name: monitoring_network
     driver: bridge
     ipam:
       config:
