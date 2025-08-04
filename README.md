@@ -110,12 +110,12 @@ Automate deployment and updates:
 ```
 Internet
     |
-Router/Gateway (192.168.1.1)
+Router/Gateway (192.168.3.1)
     |
-    ├── Pi-hole DNS (192.168.1.10) - Ad blocking, Custom DNS
-    ├── Monitoring Host (192.168.1.11) - ntopng, Grafana, Prometheus
-    ├── App Host (192.168.1.12) - Streamlit dashboards
-    └── Client Devices (192.168.1.100-254)
+    ├── Pi-hole DNS (192.168.3.10) - Ad blocking, Custom DNS
+    ├── Monitoring Host (192.168.3.11) - ntopng, Grafana, Prometheus
+    ├── App Host (192.168.3.12) - Streamlit dashboards
+    └── Client Devices (192.168.3.100-254)
 ```
 
 ## 🔧 Quick Start

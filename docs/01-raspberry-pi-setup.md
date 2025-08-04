@@ -139,9 +139,9 @@ sudo nano /etc/dhcpcd.conf
 
 # Add these lines (adjust for your network):
 # interface eth0
-# static ip_address=192.168.1.100/24
-# static routers=192.168.1.1
-# static domain_name_servers=192.168.1.1
+# static ip_address=192.168.3.100/24
+# static routers=192.168.3.1
+# static domain_name_servers=192.168.3.1
 
 # Reboot to apply changes
 sudo reboot
@@ -184,16 +184,16 @@ find . -name "*.env.example" -exec sh -c 'cp "$1" "${1%.example}"' _ {} \;
 
 ## Service-Specific Pi Configuration
 
-### Pi-hole Host (192.168.1.10)
+### Pi-hole Host (192.168.3.10)
 - Minimum 1GB RAM
 - Static IP required
 - Ports 53 (DNS) and 80 (Web) available
 
-### Monitoring Host (192.168.1.11)
+### Monitoring Host (192.168.3.11)
 - 2GB+ RAM recommended for Grafana/ntopng
 - Ports 3000 (Grafana), 3001 (ntopng)
 
-### Streamlit Apps Host (192.168.1.12)
+### Streamlit Apps Host (192.168.3.12)
 - 1GB+ RAM
 - Port range 8501-8510 for multiple apps
 

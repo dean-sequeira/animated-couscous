@@ -7,23 +7,23 @@ This document outlines the recommended network topology and configuration for th
 ```
 Internet
     |
-Router/Gateway (192.168.1.1)
+Router/Gateway (192.168.3.1)
     |
-    ├── Pi-hole DNS Server (192.168.1.10)
-    ├── Monitoring Host (192.168.1.11) - ntopng, Grafana
-    ├── Streamlit Apps Host (192.168.1.12)
-    └── Client Devices (192.168.1.100-254)
+    ├── Pi-hole DNS Server (192.168.3.10)
+    ├── Monitoring Host (192.168.3.11) - ntopng, Grafana
+    ├── Streamlit Apps Host (192.168.3.12)
+    └── Client Devices (192.168.3.100-254)
 ```
 
 ## IP Address Allocation
 
 ### Static IP Assignments
-- **Router/Gateway**: 192.168.1.1
-- **Pi-hole DNS**: 192.168.1.10
-- **Monitoring Host**: 192.168.1.11
-- **Streamlit Host**: 192.168.1.12
-- **Reserved Range**: 192.168.1.10-20 (infrastructure)
-- **DHCP Pool**: 192.168.1.100-254 (client devices)
+- **Router/Gateway**: 192.168.3.1
+- **Pi-hole DNS**: 192.168.3.10
+- **Monitoring Host**: 192.168.3.11
+- **Streamlit Host**: 192.168.3.12
+- **Reserved Range**: 192.168.3.10-20 (infrastructure)
+- **DHCP Pool**: 192.168.3.100-254 (client devices)
 
 ### Port Allocations
 - **53**: DNS (Pi-hole)
@@ -38,16 +38,16 @@ Router/Gateway (192.168.1.1)
 ### DHCP Settings
 ```yaml
 # Example router DHCP configuration
-dhcp_pool_start: 192.168.1.100
-dhcp_pool_end: 192.168.1.254
+dhcp_pool_start: 192.168.3.100
+dhcp_pool_end: 192.168.3.254
 lease_time: 24h
-default_gateway: 192.168.1.1
-primary_dns: 192.168.1.10  # Pi-hole
-secondary_dns: 192.168.1.1  # Router fallback
+default_gateway: 192.168.3.1
+primary_dns: 192.168.3.10  # Pi-hole
+secondary_dns: 192.168.3.1  # Router fallback
 ```
 
 ### DNS Settings
-1. Set Pi-hole (192.168.1.10) as primary DNS
+1. Set Pi-hole (192.168.3.10) as primary DNS
 2. Keep router IP as secondary DNS for redundancy
 3. Disable router's built-in DNS caching if possible
 
@@ -56,7 +56,7 @@ secondary_dns: 192.168.1.1  # Router fallback
 # Only if remote access needed (not recommended for security)
 # ssh_access:
 #   external_port: 2222
-#   internal_ip: 192.168.1.10
+#   internal_ip: 192.168.3.10
 #   internal_port: 22
 ```
 
@@ -64,19 +64,19 @@ secondary_dns: 192.168.1.1  # Router fallback
 
 ### Firewall Rules (UFW on each Pi)
 ```bash
-# Pi-hole host (192.168.1.10)
-sudo ufw allow from 192.168.1.0/24 to any port 53
-sudo ufw allow from 192.168.1.0/24 to any port 80
-sudo ufw allow from 192.168.1.0/24 to any port 22
+# Pi-hole host (192.168.3.10)
+sudo ufw allow from 192.168.3.0/24 to any port 53
+sudo ufw allow from 192.168.3.0/24 to any port 80
+sudo ufw allow from 192.168.3.0/24 to any port 22
 
-# Monitoring host (192.168.1.11)
-sudo ufw allow from 192.168.1.0/24 to any port 3000
-sudo ufw allow from 192.168.1.0/24 to any port 3001
-sudo ufw allow from 192.168.1.0/24 to any port 22
+# Monitoring host (192.168.3.11)
+sudo ufw allow from 192.168.3.0/24 to any port 3000
+sudo ufw allow from 192.168.3.0/24 to any port 3001
+sudo ufw allow from 192.168.3.0/24 to any port 22
 
-# Streamlit host (192.168.1.12)
-sudo ufw allow from 192.168.1.0/24 to any port 8501:8510
-sudo ufw allow from 192.168.1.0/24 to any port 22
+# Streamlit host (192.168.3.12)
+sudo ufw allow from 192.168.3.0/24 to any port 8501:8510
+sudo ufw allow from 192.168.3.0/24 to any port 22
 ```
 
 ### Network Segmentation (Advanced)
@@ -109,11 +109,11 @@ upstream_dns:
 ```yaml
 # Add these to Pi-hole custom DNS
 local_records:
-  pihole.local: 192.168.1.10
-  monitoring.local: 192.168.1.11
-  apps.local: 192.168.1.12
-  grafana.local: 192.168.1.11
-  ntopng.local: 192.168.1.11
+  pihole.local: 192.168.3.10
+  monitoring.local: 192.168.3.11
+  apps.local: 192.168.3.12
+  grafana.local: 192.168.3.11
+  ntopng.local: 192.168.3.11
 ```
 
 ## Quality of Service (QoS)
@@ -146,13 +146,13 @@ priority_low:
 ### Network Testing Commands
 ```bash
 # Test DNS resolution
-nslookup google.com 192.168.1.10
+nslookup google.com 192.168.3.10
 
 # Test connectivity between hosts
-ping 192.168.1.11
+ping 192.168.3.11
 
 # Check port availability
-nc -zv 192.168.1.10 53
+nc -zv 192.168.3.10 53
 
 # Monitor network traffic
 sudo tcpdump -i eth0 port 53
@@ -188,10 +188,10 @@ ip route show
 cat /etc/resolv.conf
 
 # Test internal connectivity
-ping -c 4 192.168.1.1
+ping -c 4 192.168.3.1
 
 # Check for IP conflicts
-arping -D 192.168.1.10
+arping -D 192.168.3.10
 ```
 
 ### Performance Optimization
