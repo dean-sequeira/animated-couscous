@@ -31,13 +31,37 @@ start_service() {
     # Check if requirements are installed
     if ! python3 -c "import streamlit, psutil, pandas, plotly" 2>/dev/null; then
         log_info "Installing dependencies..."
-        pip install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+
+        # Try different package managers in order of preference
+        if command -v pip3 &> /dev/null; then
+            pip3 install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+        elif command -v pip &> /dev/null; then
+            pip install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+        elif command -v apt &> /dev/null; then
+            log_info "Using apt to install Python packages..."
+            sudo apt update
+            sudo apt install -y python3-pip python3-streamlit python3-psutil python3-pandas python3-plotly
+        else
+            log_error "No package manager found. Please install pip3 or use apt:"
+            log_error "sudo apt update && sudo apt install python3-pip"
+            exit 1
+        fi
     fi
 
     # Start the Streamlit app
     cd "$PROJECT_DIR/streamlit_apps"
     log_info "Network Monitor available at: http://$(hostname -I | cut -d' ' -f1):8501"
-    streamlit run network_monitor.py --server.port 8501 --server.address 0.0.0.0
+
+    # Try different ways to run streamlit
+    if command -v streamlit &> /dev/null; then
+        streamlit run network_monitor.py --server.port 8501 --server.address 0.0.0.0
+    elif python3 -m streamlit --help &> /dev/null; then
+        python3 -m streamlit run network_monitor.py --server.port 8501 --server.address 0.0.0.0
+    else
+        log_error "Streamlit not found. Installing via apt..."
+        sudo apt install -y python3-streamlit
+        python3 -m streamlit run network_monitor.py --server.port 8501 --server.address 0.0.0.0
+    fi
 }
 
 stop_service() {
