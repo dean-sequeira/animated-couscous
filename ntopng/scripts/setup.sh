@@ -1,10 +1,10 @@
 #!/bin/bash
-# ntopng Setup Script
+# ntopng Setup Script for Raspberry Pi
 # This script initializes the ntopng service and required directories
 
 set -e
 
-echo "Setting up ntopng traffic monitoring..."
+echo "Setting up ntopng traffic monitoring for Raspberry Pi..."
 
 # Detect Docker Compose command (v1 vs v2)
 if command -v docker-compose &> /dev/null; then
@@ -18,6 +18,9 @@ else
 fi
 
 echo "Using Docker Compose command: $DOCKER_COMPOSE"
+
+# Use Raspberry Pi optimized configuration
+COMPOSE_FILE="-f docker-compose.yml"
 
 # Create required directories
 echo "Creating directories..."
@@ -52,14 +55,18 @@ fi
 
 # Pull the latest ntopng image
 echo "Pulling ntopng Docker image..."
-$DOCKER_COMPOSE pull
+$DOCKER_COMPOSE $COMPOSE_FILE pull
 
 # Create systemd service (optional)
 read -p "Do you want to create a systemd service? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Detect which docker-compose command to use in systemd service
-    COMPOSE_CMD=$(which docker-compose 2>/dev/null || echo "docker compose")
+    if command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="$(which docker-compose) -f docker-compose.yml"
+    else
+        COMPOSE_CMD="docker compose -f docker-compose.yml"
+    fi
 
     sudo tee /etc/systemd/system/ntopng.service > /dev/null <<EOF
 [Unit]
@@ -85,6 +92,6 @@ EOF
 fi
 
 echo "Setup complete!"
-echo "To start ntopng: $DOCKER_COMPOSE up -d"
+echo "To start ntopng: $DOCKER_COMPOSE $COMPOSE_FILE up -d"
 echo "Web interface will be available at: http://$(hostname -I | cut -d' ' -f1):3001"
 echo "Please ensure your network interface supports promiscuous mode and traffic mirroring is configured on your router."
