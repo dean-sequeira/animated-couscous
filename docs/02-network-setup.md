@@ -9,9 +9,8 @@ Internet
     |
 Router/Gateway (192.168.3.1)
     |
-    ├── Pi-hole DNS Server (192.168.3.10)
-    ├── Monitoring Host (192.168.3.11) - ntopng, Grafana
-    ├── Streamlit Apps Host (192.168.3.12)
+    ├── Pi-hole + Monitoring Host (192.168.3.10) - DNS, Ad blocking, ntopng, Grafana
+    ├── Streamlit Apps Host (192.168.3.11) - Internal dashboards and apps
     └── Client Devices (192.168.3.100-254)
 ```
 
@@ -19,9 +18,8 @@ Router/Gateway (192.168.3.1)
 
 ### Static IP Assignments
 - **Router/Gateway**: 192.168.3.1
-- **Pi-hole DNS**: 192.168.3.10
-- **Monitoring Host**: 192.168.3.11
-- **Streamlit Host**: 192.168.3.12
+- **Pi-hole + Monitoring Host**: 192.168.3.10 (DNS, ntopng, Grafana, Prometheus)
+- **Streamlit Apps Host**: 192.168.3.11
 - **Reserved Range**: 192.168.3.10-20 (infrastructure)
 - **DHCP Pool**: 192.168.3.100-254 (client devices)
 
@@ -30,7 +28,8 @@ Router/Gateway (192.168.3.1)
 - **80**: Pi-hole Web Interface
 - **3000**: Grafana Dashboard
 - **3001**: ntopng Web Interface
-- **8501-8510**: Streamlit Applications
+- **9090**: Prometheus Metrics
+- **8501-8510**: Streamlit Applications (on second Pi)
 - **22**: SSH (all hosts)
 
 ## Router Configuration
@@ -64,19 +63,17 @@ secondary_dns: 192.168.3.1  # Router fallback
 
 ### Firewall Rules (UFW on each Pi)
 ```bash
-# Pi-hole host (192.168.3.10)
-sudo ufw allow from 192.168.3.0/24 to any port 53
-sudo ufw allow from 192.168.3.0/24 to any port 80
-sudo ufw allow from 192.168.3.0/24 to any port 22
+# Pi-hole + Monitoring host (192.168.3.10) - Combined services
+sudo ufw allow from 192.168.3.0/24 to any port 53    # DNS (Pi-hole)
+sudo ufw allow from 192.168.3.0/24 to any port 80    # Pi-hole Web Interface
+sudo ufw allow from 192.168.3.0/24 to any port 3000  # Grafana Dashboard
+sudo ufw allow from 192.168.3.0/24 to any port 3001  # ntopng Web Interface
+sudo ufw allow from 192.168.3.0/24 to any port 9090  # Prometheus Metrics
+sudo ufw allow from 192.168.3.0/24 to any port 22    # SSH
 
-# Monitoring host (192.168.3.11)
-sudo ufw allow from 192.168.3.0/24 to any port 3000
-sudo ufw allow from 192.168.3.0/24 to any port 3001
-sudo ufw allow from 192.168.3.0/24 to any port 22
-
-# Streamlit host (192.168.3.12)
-sudo ufw allow from 192.168.3.0/24 to any port 8501:8510
-sudo ufw allow from 192.168.3.0/24 to any port 22
+# Streamlit Apps host (192.168.3.11)
+sudo ufw allow from 192.168.3.0/24 to any port 8501:8510  # Streamlit Applications
+sudo ufw allow from 192.168.3.0/24 to any port 22         # SSH
 ```
 
 ### Network Segmentation (Advanced)
@@ -110,10 +107,10 @@ upstream_dns:
 # Add these to Pi-hole custom DNS
 local_records:
   pihole.local: 192.168.3.10
-  monitoring.local: 192.168.3.11
-  apps.local: 192.168.3.12
-  grafana.local: 192.168.3.11
-  ntopng.local: 192.168.3.11
+  monitoring.local: 192.168.3.10
+  apps.local: 192.168.3.11
+  grafana.local: 192.168.3.10
+  ntopng.local: 192.168.3.10
 ```
 
 ## Quality of Service (QoS)

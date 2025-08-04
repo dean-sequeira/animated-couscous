@@ -112,9 +112,8 @@ Internet
     |
 Router/Gateway (192.168.3.1)
     |
-    ├── Pi-hole DNS (192.168.3.10) - Ad blocking, Custom DNS
-    ├── Monitoring Host (192.168.3.11) - ntopng, Grafana, Prometheus
-    ├── App Host (192.168.3.12) - Streamlit dashboards
+    ├── Pi-hole + Monitoring Host (192.168.3.10) - DNS, Ad blocking, ntopng, Grafana
+    ├── Streamlit Apps Host (192.168.3.11) - Internal dashboards and apps
     └── Client Devices (192.168.3.100-254)
 ```
 

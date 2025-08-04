@@ -184,18 +184,16 @@ find . -name "*.env.example" -exec sh -c 'cp "$1" "${1%.example}"' _ {} \;
 
 ## Service-Specific Pi Configuration
 
-### Pi-hole Host (192.168.3.10)
-- Minimum 1GB RAM
+### Pi-hole + Monitoring Host (192.168.3.10)
+- **Minimum 4GB RAM recommended** (combining multiple services)
 - Static IP required
-- Ports 53 (DNS) and 80 (Web) available
+- Services: Pi-hole DNS, ntopng, Grafana, Prometheus
+- Ports: 53 (DNS), 80 (Pi-hole Web), 3000 (Grafana), 3001 (ntopng), 9090 (Prometheus)
 
-### Monitoring Host (192.168.3.11)
-- 2GB+ RAM recommended for Grafana/ntopng
-- Ports 3000 (Grafana), 3001 (ntopng)
-
-### Streamlit Apps Host (192.168.3.12)
-- 1GB+ RAM
+### Streamlit Apps Host (192.168.3.11)
+- 2GB+ RAM recommended
 - Port range 8501-8510 for multiple apps
+- Services: Internal dashboards and parental control apps
 
 ## Network Interface Configuration
 
