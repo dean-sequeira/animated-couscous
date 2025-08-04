@@ -1,15 +1,8 @@
-version: '3.8'
-
 services:
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "80:80/tcp"
-      - "67:67/udp"    # DHCP server
-      - "68:68/udp"    # DHCP client
+    network_mode: "host"  # Required for DHCP to work properly
     environment:
       TZ: ${TZ:-America/New_York}
       WEBPASSWORD: ${PIHOLE_PASSWORD:-}
@@ -40,28 +33,14 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-    networks:
-      - monitoring_network
     healthcheck:
       test: ["CMD", "dig", "@127.0.0.1", "google.com"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    network_mode: "host"  # Required for DHCP to work properly
-
-networks:
-  monitoring_network:
-    name: monitoring_network
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
