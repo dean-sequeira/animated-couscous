@@ -27,7 +27,7 @@ else
 fi
 
 # Use Raspberry Pi optimized configuration
-COMPOSE_FILE="-f docker-compose.rpi.yml"
+COMPOSE_FILE="-f docker-compose.yml"
 
 # Functions
 log_info() {

@@ -2,19 +2,28 @@ version: '3.8'
 
 services:
   ntopng:
-    image: ntop/ntopng:latest
+    # Use a community-built ARM-compatible image
+    image: vimagick/ntopng:latest
     container_name: ntopng
     restart: unless-stopped
     network_mode: host
     cap_add:
       - NET_ADMIN
       - NET_RAW
-    environment:
-      - NTOPNG_CONFIG_FILE=/etc/ntopng/ntopng.conf
+    command: >
+      ntopng 
+      -i eth0 
+      -P /var/lib/ntopng/ntopng.pid
+      -d /var/lib/ntopng
+      -w 3000
+      -v 6
+      -n 1
+      --dump-timeline=both
+      --dump-flows=both
+      -m 192.168.3.0/24
+      --disable-login=1
+      --community
     volumes:
-      - ./config/ntopng.conf:/etc/ntopng/ntopng.conf:ro
-      - ./config/categories.txt:/etc/ntopng/categories.txt:ro
-      - ./config/alerts.conf:/etc/ntopng/alerts.conf:ro
       - ./data:/var/lib/ntopng
       - /var/log/ntopng:/var/log/ntopng
     ports:
