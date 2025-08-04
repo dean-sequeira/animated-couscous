@@ -1,5 +1,5 @@
 #!/bin/bash
-# ntopng Service Management Script
+# ntopng Service Management Script for Raspberry Pi
 # Provides common operations for managing the ntopng service
 
 set -e
@@ -26,6 +26,9 @@ else
     exit 1
 fi
 
+# Use Raspberry Pi optimized configuration
+COMPOSE_FILE="-f docker-compose.rpi.yml"
+
 # Functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -41,40 +44,40 @@ log_error() {
 
 show_status() {
     log_info "ntopng Service Status:"
-    $DOCKER_COMPOSE ps
+    $DOCKER_COMPOSE $COMPOSE_FILE ps
     echo
     log_info "Service Health:"
-    $DOCKER_COMPOSE exec ntopng ntopng --version 2>/dev/null || log_warn "Service may not be running"
+    $DOCKER_COMPOSE $COMPOSE_FILE exec ntopng ntopng --version 2>/dev/null || log_warn "Service may not be running"
 }
 
 start_service() {
     log_info "Starting ntopng service..."
-    $DOCKER_COMPOSE up -d
+    $DOCKER_COMPOSE $COMPOSE_FILE up -d
     log_info "Service started. Web interface available at: http://$(hostname -I | cut -d' ' -f1):3001"
 }
 
 stop_service() {
     log_info "Stopping ntopng service..."
-    $DOCKER_COMPOSE down
+    $DOCKER_COMPOSE $COMPOSE_FILE down
     log_info "Service stopped"
 }
 
 restart_service() {
     log_info "Restarting ntopng service..."
-    $DOCKER_COMPOSE restart
+    $DOCKER_COMPOSE $COMPOSE_FILE restart
     log_info "Service restarted"
 }
 
 update_service() {
     log_info "Updating ntopng service..."
-    $DOCKER_COMPOSE pull
-    $DOCKER_COMPOSE up -d
+    $DOCKER_COMPOSE $COMPOSE_FILE pull
+    $DOCKER_COMPOSE $COMPOSE_FILE up -d
     log_info "Service updated"
 }
 
 view_logs() {
     log_info "Showing ntopng logs (Ctrl+C to exit)..."
-    $DOCKER_COMPOSE logs -f ntopng
+    $DOCKER_COMPOSE $COMPOSE_FILE logs -f ntopng
 }
 
 check_network() {
@@ -111,7 +114,7 @@ cleanup_data() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "Cleaning up ntopng data..."
-        $DOCKER_COMPOSE down
+        $DOCKER_COMPOSE $COMPOSE_FILE down
         sudo rm -rf data/*
         sudo rm -rf /var/log/ntopng/*
         log_info "Data cleanup completed"
@@ -121,7 +124,7 @@ cleanup_data() {
 }
 
 show_help() {
-    echo "ntopng Service Management Script"
+    echo "ntopng Service Management Script for Raspberry Pi"
     echo
     echo "Usage: $0 [COMMAND]"
     echo
