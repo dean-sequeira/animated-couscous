@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  bandwhich:
+    image: debian:bullseye-slim
+    container_name: bandwhich
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    command: >
+      sh -c "
+      apt-get update && 
+      apt-get install -y wget curl &&
+      wget https://github.com/imsnif/bandwhich/releases/download/v0.20.0/bandwhich-v0.20.0-aarch64-unknown-linux-musl.tar.gz &&
+      tar -xzf bandwhich-v0.20.0-aarch64-unknown-linux-musl.tar.gz &&
+      chmod +x bandwhich &&
+      ./bandwhich --interface eth0
+      "
+    volumes:
+      - ./data:/data
+    stdin_open: true
+    tty: true
