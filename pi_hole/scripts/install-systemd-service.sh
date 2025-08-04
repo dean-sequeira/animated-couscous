@@ -27,10 +27,10 @@ RemainAfterExit=yes
 User=${USER}
 Group=${USER}
 WorkingDirectory=${PROJECT_DIR}
-ExecStartPre=/usr/bin/docker compose down
-ExecStart=/usr/bin/docker compose up -d
-ExecStop=/usr/bin/docker compose down
-ExecReload=/usr/bin/docker compose restart
+ExecStartPre=/usr/bin/docker compose -f ${PROJECT_DIR}/docker-compose.yml down
+ExecStart=/usr/bin/docker compose -f ${PROJECT_DIR}/docker-compose.yml up -d
+ExecStop=/usr/bin/docker compose -f ${PROJECT_DIR}/docker-compose.yml down
+ExecReload=/usr/bin/docker compose -f ${PROJECT_DIR}/docker-compose.yml restart
 TimeoutStartSec=300
 TimeoutStopSec=60
 
