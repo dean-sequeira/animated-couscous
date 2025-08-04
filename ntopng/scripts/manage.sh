@@ -1,14 +1,11 @@
 #!/bin/bash
-# Network Monitoring Service Management Script for Raspberry Pi
-# Now using Netdata instead of ntopng for better ARM64 compatibility
+# Network Monitor Streamlit App Launcher for Raspberry Pi
+# This replaces the problematic ntopng Docker setup
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-
-# Change to project directory
-cd "$PROJECT_DIR"
 
 # Colors for output
 RED='\033[0;31m'
@@ -16,20 +13,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Detect Docker Compose command (v1 vs v2)
-if command -v docker-compose &> /dev/null; then
-    DOCKER_COMPOSE="docker-compose"
-elif docker compose version &> /dev/null; then
-    DOCKER_COMPOSE="docker compose"
-else
-    echo "Error: Neither 'docker-compose' nor 'docker compose' found"
-    exit 1
-fi
-
-# Use Netdata instead of ntopng for better ARM64 compatibility
-COMPOSE_FILE="-f docker-compose.netdata.yml"
-
-# Functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -42,104 +25,53 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-show_status() {
-    log_info "Netdata Service Status:"
-    $DOCKER_COMPOSE $COMPOSE_FILE ps
-    echo
-    log_info "Service Health:"
-    $DOCKER_COMPOSE $COMPOSE_FILE exec netdata netdata -v 2>/dev/null || log_warn "Service may not be running"
-}
-
 start_service() {
-    log_info "Starting Netdata service..."
-    $DOCKER_COMPOSE $COMPOSE_FILE up -d
-    log_info "Service started. Web interface available at: http://$(hostname -I | cut -d' ' -f1):19999"
+    log_info "Starting Network Monitor Streamlit App..."
+
+    # Check if requirements are installed
+    if ! python3 -c "import streamlit, psutil, pandas, plotly" 2>/dev/null; then
+        log_info "Installing dependencies..."
+        pip3 install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+    fi
+
+    # Start the Streamlit app
+    cd "$PROJECT_DIR/streamlit_apps"
+    log_info "Network Monitor available at: http://$(hostname -I | cut -d' ' -f1):8501"
+    streamlit run network_monitor.py --server.port 8501 --server.address 0.0.0.0
 }
 
 stop_service() {
-    log_info "Stopping Netdata service..."
-    $DOCKER_COMPOSE $COMPOSE_FILE down
-    log_info "Service stopped"
+    log_info "Stopping Network Monitor..."
+    pkill -f "streamlit run network_monitor.py" || log_warn "No running instances found"
 }
 
-restart_service() {
-    log_info "Restarting Netdata service..."
-    $DOCKER_COMPOSE $COMPOSE_FILE restart
-    log_info "Service restarted"
-}
-
-update_service() {
-    log_info "Updating Netdata service..."
-    $DOCKER_COMPOSE $COMPOSE_FILE pull
-    $DOCKER_COMPOSE $COMPOSE_FILE up -d
-    log_info "Service updated"
-}
-
-view_logs() {
-    log_info "Showing Netdata logs (Ctrl+C to exit)..."
-    $DOCKER_COMPOSE $COMPOSE_FILE logs -f netdata
-}
-
-check_network() {
-    log_info "Checking network interface configuration..."
-
-    # Check if .env exists
-    if [ ! -f .env ]; then
-        log_error ".env file not found. Please copy from .env.example and configure."
-        return 1
-    fi
-
-    # Source environment variables
-    source .env
-
-    # Check interface exists
-    if ! ip link show "$NETWORK_INTERFACE" &>/dev/null; then
-        log_error "Network interface '$NETWORK_INTERFACE' not found"
-        log_info "Available interfaces:"
-        ip link show | grep -E '^[0-9]+:' | cut -d':' -f2 | sed 's/^ *//'
-        return 1
-    fi
-
-    # Check promiscuous mode
-    if ip link show "$NETWORK_INTERFACE" | grep -q PROMISC; then
-        log_info "Promiscuous mode is enabled on $NETWORK_INTERFACE"
+status_service() {
+    if pgrep -f "streamlit run network_monitor.py" > /dev/null; then
+        log_info "✅ Network Monitor is running"
+        log_info "Access at: http://$(hostname -I | cut -d' ' -f1):8501"
     else
-        log_warn "Promiscuous mode is NOT enabled on $NETWORK_INTERFACE"
-        log_info "Enable with: sudo ip link set $NETWORK_INTERFACE promisc on"
-    fi
-}
-
-cleanup_data() {
-    read -p "This will remove all Netdata data. Are you sure? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Cleaning up Netdata data..."
-        $DOCKER_COMPOSE $COMPOSE_FILE down
-        sudo rm -rf data/*
-        sudo rm -rf /var/log/netdata/*
-        log_info "Data cleanup completed"
-    else
-        log_info "Cleanup cancelled"
+        log_warn "❌ Network Monitor is not running"
     fi
 }
 
 show_help() {
-    echo "Netdata Service Management Script for Raspberry Pi"
+    echo "Network Monitor Management Script"
     echo
     echo "Usage: $0 [COMMAND]"
     echo
     echo "Commands:"
-    echo "  start       Start the Netdata service"
-    echo "  stop        Stop the Netdata service"
-    echo "  restart     Restart the Netdata service"
-    echo "  status      Show service status and health"
-    echo "  logs        View service logs"
-    echo "  update      Update Netdata to latest version"
-    echo "  network     Check network interface configuration"
-    echo "  backup      Create a backup of configuration and data"
-    echo "  cleanup     Remove all data (requires confirmation)"
+    echo "  start       Start the Network Monitor web app"
+    echo "  stop        Stop the Network Monitor web app"
+    echo "  status      Check if the app is running"
+    echo "  install     Install Python dependencies"
     echo "  help        Show this help message"
     echo
+}
+
+install_deps() {
+    log_info "Installing Network Monitor dependencies..."
+    pip3 install -r "$PROJECT_DIR/streamlit_apps/requirements_network.txt"
+    log_info "Dependencies installed successfully"
 }
 
 # Main command processing
@@ -150,26 +82,11 @@ case "${1:-help}" in
     stop)
         stop_service
         ;;
-    restart)
-        restart_service
-        ;;
     status)
-        show_status
+        status_service
         ;;
-    logs)
-        view_logs
-        ;;
-    update)
-        update_service
-        ;;
-    network)
-        check_network
-        ;;
-    backup)
-        ./scripts/backup.sh
-        ;;
-    cleanup)
-        cleanup_data
+    install)
+        install_deps
         ;;
     help|--help|-h)
         show_help
