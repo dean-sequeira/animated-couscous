@@ -28,7 +28,10 @@ ssh pi@<pi-ip-address>
 sudo apt update && sudo apt upgrade -y
 
 # Install essential packages
-sudo apt install -y git vim curl htop ufw fail2ban
+sudo apt install -y git vim curl htop ufw fail2ban dnsutils
+
+# dnsutils provides dig, nslookup, and other DNS troubleshooting tools
+# These are essential for testing Pi-hole and network connectivity
 ```
 
 ### 3. External SSD Setup

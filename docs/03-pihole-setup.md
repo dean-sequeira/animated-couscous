@@ -127,8 +127,35 @@ docker compose ps
 # Check logs for any startup issues
 docker compose logs pihole
 
-# Test DNS resolution
-nslookup google.com 127.0.0.1
+# Set the Pi-hole web interface password
+docker compose exec pihole pihole setpassword
+
+# Alternative: Set password non-interactively
+# docker compose exec pihole pihole setpassword your_secure_password
+
+# Test DNS resolution using dig (more widely available)
+dig @127.0.0.1 google.com
+
+# Alternative: Test using the Pi-hole container's built-in tools
+docker compose exec pihole nslookup google.com 127.0.0.1
+
+# Or use curl to test HTTP connectivity through DNS
+curl -I http://google.com
+```
+
+### 5. Configure Web Interface Access
+```bash
+# Access the Pi-hole web interface
+# URL: http://192.168.3.10/admin
+
+# If you need to change the password later:
+docker compose exec pihole pihole setpassword
+
+# To disable password protection (not recommended):
+# docker compose exec pihole pihole setpassword ""
+
+# To check Pi-hole status from command line:
+docker compose exec pihole pihole status
 ```
 
 ## Service Management
