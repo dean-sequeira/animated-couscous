@@ -16,6 +16,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Detect Docker Compose command (v1 vs v2)
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo "Error: Neither 'docker-compose' nor 'docker compose' found"
+    exit 1
+fi
+
 # Functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -31,40 +41,40 @@ log_error() {
 
 show_status() {
     log_info "ntopng Service Status:"
-    docker-compose ps
+    $DOCKER_COMPOSE ps
     echo
     log_info "Service Health:"
-    docker-compose exec ntopng ntopng --version 2>/dev/null || log_warn "Service may not be running"
+    $DOCKER_COMPOSE exec ntopng ntopng --version 2>/dev/null || log_warn "Service may not be running"
 }
 
 start_service() {
     log_info "Starting ntopng service..."
-    docker-compose up -d
+    $DOCKER_COMPOSE up -d
     log_info "Service started. Web interface available at: http://$(hostname -I | cut -d' ' -f1):3001"
 }
 
 stop_service() {
     log_info "Stopping ntopng service..."
-    docker-compose down
+    $DOCKER_COMPOSE down
     log_info "Service stopped"
 }
 
 restart_service() {
     log_info "Restarting ntopng service..."
-    docker-compose restart
+    $DOCKER_COMPOSE restart
     log_info "Service restarted"
 }
 
 update_service() {
     log_info "Updating ntopng service..."
-    docker-compose pull
-    docker-compose up -d
+    $DOCKER_COMPOSE pull
+    $DOCKER_COMPOSE up -d
     log_info "Service updated"
 }
 
 view_logs() {
     log_info "Showing ntopng logs (Ctrl+C to exit)..."
-    docker-compose logs -f ntopng
+    $DOCKER_COMPOSE logs -f ntopng
 }
 
 check_network() {
@@ -101,7 +111,7 @@ cleanup_data() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "Cleaning up ntopng data..."
-        docker-compose down
+        $DOCKER_COMPOSE down
         sudo rm -rf data/*
         sudo rm -rf /var/log/ntopng/*
         log_info "Data cleanup completed"

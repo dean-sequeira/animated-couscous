@@ -6,6 +6,19 @@ set -e
 
 echo "Setting up ntopng traffic monitoring..."
 
+# Detect Docker Compose command (v1 vs v2)
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+else
+    echo "Error: Neither 'docker-compose' nor 'docker compose' found"
+    echo "Please install Docker Compose first."
+    exit 1
+fi
+
+echo "Using Docker Compose command: $DOCKER_COMPOSE"
+
 # Create required directories
 echo "Creating directories..."
 mkdir -p data
@@ -37,19 +50,17 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo "Docker Compose not found. Please install Docker Compose first."
-    exit 1
-fi
-
 # Pull the latest ntopng image
 echo "Pulling ntopng Docker image..."
-docker-compose pull
+$DOCKER_COMPOSE pull
 
 # Create systemd service (optional)
 read -p "Do you want to create a systemd service? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # Detect which docker-compose command to use in systemd service
+    COMPOSE_CMD=$(which docker-compose 2>/dev/null || echo "docker compose")
+
     sudo tee /etc/systemd/system/ntopng.service > /dev/null <<EOF
 [Unit]
 Description=ntopng Traffic Monitoring
@@ -60,8 +71,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$(pwd)
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=${COMPOSE_CMD} up -d
+ExecStop=${COMPOSE_CMD} down
 TimeoutStartSec=0
 
 [Install]
@@ -74,6 +85,6 @@ EOF
 fi
 
 echo "Setup complete!"
-echo "To start ntopng: docker-compose up -d"
+echo "To start ntopng: $DOCKER_COMPOSE up -d"
 echo "Web interface will be available at: http://$(hostname -I | cut -d' ' -f1):3001"
 echo "Please ensure your network interface supports promiscuous mode and traffic mirroring is configured on your router."
