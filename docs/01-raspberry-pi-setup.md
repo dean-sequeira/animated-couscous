@@ -166,9 +166,14 @@ sudo systemctl start fail2ban
 
 ### 8. Repository Setup
 ```bash
-# Clone the project repository
-git clone <your-repo-url> /home/pi/animated-couscous
-cd /home/pi/animated-couscous
+# Clone the project repository to SSD storage for better performance
+git clone <your-repo-url> /mnt/storage/animated-couscous
+
+# Create symlink for easy access from home directory
+ln -s /mnt/storage/animated-couscous /home/pi/animated-couscous
+
+# Change to project directory
+cd /mnt/storage/animated-couscous
 
 # Create service directories following naming convention
 mkdir -p pi_hole ntopng streamlit_apps grafana_monitoring ansible
