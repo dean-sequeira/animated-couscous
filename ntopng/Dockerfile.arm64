@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     librrd-dev \
     libcurl4-openssl-dev \
-    libmysqlclient-dev \
+    libmariadb-dev \
     wget \
     libssl-dev \
     libzmq3-dev \
@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     libldap2-dev \
     libexpat1-dev \
     libradcli-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create ntopng user
@@ -54,6 +55,18 @@ RUN mkdir -p /var/lib/ntopng /var/log/ntopng && \
 
 # Update library cache
 RUN ldconfig
+
+# Clean up build dependencies to reduce image size
+RUN apt-get remove -y \
+    build-essential \
+    git \
+    autotools-dev \
+    autogen \
+    automake \
+    pkg-config \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 # Set working directory
 WORKDIR /var/lib/ntopng
