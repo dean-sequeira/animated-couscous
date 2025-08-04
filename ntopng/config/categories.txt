@@ -1,0 +1,50 @@
+# Traffic Categories Configuration
+# Format: category_name:protocol:port_range
+
+# Web browsing
+Web:tcp:80,443,8080,8443
+
+# Email services
+Email:tcp:25,110,143,993,995,587
+Email:tcp:465
+
+# File sharing
+FileSharing:tcp:20,21,22,989,990
+FileSharing:udp:69
+
+# Streaming services
+Streaming:tcp:1935,554,8554
+Streaming:udp:5004,5005
+
+# Gaming
+Gaming:tcp:27015,27016,27017,27018,27019
+Gaming:udp:27015,27016,27017,27018,27019
+
+# VoIP/Video calls
+VoIP:tcp:5060,5061
+VoIP:udp:5060,5061,10000-20000
+
+# Remote access
+RemoteAccess:tcp:3389,5900,5901,22
+RemoteAccess:udp:3389
+
+# P2P/BitTorrent
+P2P:tcp:6881-6889
+P2P:udp:6881-6889
+
+# Social media
+Social:tcp:80,443
+
+# Cloud services
+Cloud:tcp:80,443
+
+# DNS
+DNS:udp:53
+DNS:tcp:53
+
+# DHCP
+DHCP:udp:67,68
+
+# Network management
+NetworkMgmt:tcp:161,162
+NetworkMgmt:udp:161,162

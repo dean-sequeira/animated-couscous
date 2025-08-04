@@ -5,14 +5,14 @@ ntopng provides real-time network traffic monitoring and analysis, offering insi
 ## Service Overview
 
 - **Purpose**: Network traffic monitoring and analysis
-- **Host Requirements**: Raspberry Pi with 2GB+ RAM (192.168.1.11)
+- **Host Requirements**: Raspberry Pi with 2GB+ RAM (192.168.3.11)
 - **Dependencies**: Docker, Docker Compose
 - **Ports**: 3001 (Web Interface)
 
 ## Pre-Installation Requirements
 
 ### Network Configuration
-- Static IP address configured (192.168.1.11)
+- Static IP address configured (192.168.3.11)
 - Network interface in promiscuous mode for traffic capture
 - Router configured for port mirroring (if supported)
 
@@ -55,8 +55,8 @@ NTOPNG_DATA_DIR=/var/lib/ntopng
 NTOPNG_LOG_LEVEL=normal
 
 # Network Configuration
-NETWORK_SUBNET=192.168.1.0/24
-ROUTER_IP=192.168.1.1
+NETWORK_SUBNET=192.168.3.0/24
+ROUTER_IP=192.168.3.1
 
 # Database Configuration
 DB_RETENTION_DAYS=30
@@ -88,7 +88,7 @@ Create `config/ntopng.conf`:
 -d=/var/lib/ntopng
 
 # Network configuration
--n=192.168.1.0/24
+-n=192.168.3.0/24
 
 # Enable historical data
 -F=es
@@ -134,7 +134,7 @@ htop
 ## Web Interface Access
 
 ### Access URL
-- URL: http://192.168.1.11:3001
+- URL: http://192.168.3.11:3001
 - Default credentials: admin/admin (change immediately)
 
 ### Key Features
@@ -204,7 +204,7 @@ find $BACKUP_DIR -name "ntopng-data-*.tar.gz" -mtime +7 -delete
 ### Flow Export Integration
 ```bash
 # Export flows to external systems
--F=es:elastic_host=192.168.1.11:9200
+-F=es:elastic_host=192.168.3.11:9200
 
 # NetFlow/sFlow support
 --netflow-port=2055
@@ -214,10 +214,10 @@ find $BACKUP_DIR -name "ntopng-data-*.tar.gz" -mtime +7 -delete
 ### API Integration
 ```bash
 # REST API access for automation
-curl "http://192.168.1.11:3001/lua/rest/v2/get/host/stats.lua?host=192.168.1.100"
+curl "http://192.168.3.11:3001/lua/rest/v2/get/host/stats.lua?host=192.168.3.100"
 
 # Export data programmatically
-curl "http://192.168.1.11:3001/lua/export_data.lua?format=json"
+curl "http://192.168.3.11:3001/lua/export_data.lua?format=json"
 ```
 
 ## Performance Tuning
