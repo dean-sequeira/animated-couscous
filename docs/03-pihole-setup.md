@@ -106,110 +106,62 @@ nano .env
 # Save and exit (Ctrl+X, then Y, then Enter in nano)
 ```
 
-#### Option C: Use environment variables from command line
+### 3. Prepare Storage Directories
 ```bash
-# Set key variables and generate .env file
-read -s -p "Enter Pi-hole admin password: " PIHOLE_PASS
-echo
+# Ensure Pi-hole data directories exist on SSD
+sudo mkdir -p /mnt/storage/pi_hole_data/{etc-pihole,etc-dnsmasq.d}
+sudo chown -R pi:pi /mnt/storage/pi_hole_data
 
-cat > .env << EOF
-TZ=America/New_York
-SERVER_IP=192.168.3.10
-INTERFACE=eth0
-VIRTUAL_HOST=pihole.local
-PIHOLE_PASSWORD=${PIHOLE_PASS}
-DNS1=1.1.1.1
-DNS2=1.0.0.1
-IPV6=false
-DNSMASQ_LISTENING=local
-REV_SERVER=true
-REV_SERVER_TARGET=192.168.3.1
-REV_SERVER_DOMAIN=local
-REV_SERVER_CIDR=192.168.3.0/24
-TEMPERATURE_UNIT=c
-DNSSEC=true
-CONDITIONAL_FORWARDING=true
-CONDITIONAL_FORWARDING_IP=192.168.3.1
-CONDITIONAL_FORWARDING_DOMAIN=local
-CONDITIONAL_FORWARDING_REVERSE=3.168.192.in-addr.arpa
-EOF
-
-# Verify the file was created
-echo "Created .env file:"
-cat .env
+# Set proper permissions
+chmod 755 /mnt/storage/pi_hole_data
 ```
 
-#### Option D: Manual creation
+### 4. Deploy Pi-hole Service
 ```bash
-# Use your preferred text editor to create and edit the .env file
-nano .env
+# Start the Pi-hole service
+docker compose up -d
 
-# Add the following content, adjusting values as necessary:
-# Pi-hole Configuration
-TZ=America/New_York
-SERVER_IP=192.168.3.10
-INTERFACE=eth0
-VIRTUAL_HOST=pihole.local
+# Verify the service is running
+docker compose ps
 
-# Pi-hole Web Interface
-PIHOLE_PASSWORD=your_secure_password_here
+# Check logs for any startup issues
+docker compose logs pihole
 
-# DNS Configuration
-DNS1=1.1.1.1
-DNS2=1.0.0.1
-IPV6=false
-
-# DNSMASQ Configuration
-DNSMASQ_LISTENING=local
-
-# Reverse DNS
-REV_SERVER=true
-REV_SERVER_TARGET=192.168.3.1
-REV_SERVER_DOMAIN=local
-REV_SERVER_CIDR=192.168.3.0/24
-
-# Display Settings
-TEMPERATURE_UNIT=c
-
-# Advanced DNS Settings
-DNSSEC=true
-CONDITIONAL_FORWARDING=true
-CONDITIONAL_FORWARDING_IP=192.168.3.1
-CONDITIONAL_FORWARDING_DOMAIN=local
-CONDITIONAL_FORWARDING_REVERSE=3.168.192.in-addr.arpa
-```
-
-### 3. Docker Compose Configuration
-The service uses official Pi-hole Docker image with persistent storage and proper networking.
-
-### 4. Initial Blocklists
-Configure additional blocklists in `config/adlists.list`:
-```
-# Recommended blocklists
-https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-https://mirror1.malwaredomains.com/files/justdomains
-https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
-https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/master/MobileFilter/sections/adservers.txt
+# Test DNS resolution
+nslookup google.com 127.0.0.1
 ```
 
 ## Service Management
 
 ### Start Service
 ```bash
-cd /home/pi/animated-couscous/pi-hole
-docker-compose up -d
+cd /mnt/storage/animated-couscous/pi_hole
+docker compose up -d
 ```
 
 ### Check Status
 ```bash
-docker-compose ps
-docker-compose logs pihole
+docker compose ps
+docker compose logs pihole
+
+# Check if Pi-hole is responding to DNS queries
+docker compose exec pihole pihole status
+```
+
+### Stop Service
+```bash
+docker compose down
 ```
 
 ### Update Service
 ```bash
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
+```
+
+### Restart Service
+```bash
+docker compose restart pihole
 ```
 
 ## Configuration
