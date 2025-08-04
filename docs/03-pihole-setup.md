@@ -1,24 +1,24 @@
 # Pi-hole Service Setup Instructions
 
-Pi-hole provides network-level ad blocking by acting as a DNS sinkhole for unwanted domains. This service is critical for the home network infrastructure.
+Pi-hole provides network-level ad blocking by acting as a DNS sinkhole for unwanted domains. This service is critical for the home network infrastructure and runs on the combined Pi-hole + Monitoring host.
 
 ## Service Overview
 
 - **Purpose**: DNS-level ad blocking and network-wide filtering
-- **Host Requirements**: Raspberry Pi with static IP (192.168.1.10)
+- **Host Requirements**: Raspberry Pi with static IP (192.168.3.10) - Combined with monitoring services
 - **Dependencies**: Docker, Docker Compose
 - **Ports**: 53 (DNS), 80 (Web Interface), 443 (HTTPS)
 
 ## Pre-Installation Requirements
 
 ### Network Configuration
-- Static IP address configured (192.168.1.10)
+- Static IP address configured (192.168.3.10)
 - Router DHCP configured to use Pi-hole as primary DNS
 - Firewall rules allowing DNS traffic from local network
 
 ### System Requirements
-- Minimum 1GB RAM
-- 8GB+ storage space
+- **Minimum 4GB RAM** (since this Pi also runs ntopng, Grafana, Prometheus)
+- SSD storage mounted at `/mnt/storage`
 - Reliable power supply (UPS recommended)
 
 ## Directory Structure
@@ -40,28 +40,143 @@ pi-hole/
 
 ### 1. Create Service Directory
 ```bash
-mkdir -p /home/pi/animated-couscous/pi-hole/config
-mkdir -p /home/pi/animated-couscous/pi-hole/scripts
-cd /home/pi/animated-couscous/pi-hole
+# Navigate to the project directory on SSD storage
+cd /mnt/storage/animated-couscous/pi_hole
+
+# Create config and scripts directories if they don't exist
+mkdir -p config scripts
+
+# Verify directory structure
+ls -la
 ```
 
 ### 2. Environment Configuration
-Create `.env` file with your specific settings:
+
+#### Option A: Create .env file directly via SSH
 ```bash
+# Create .env file using heredoc (copy/paste this entire block)
+cat > .env << 'EOF'
 # Pi-hole Configuration
-PIHOLE_PASSWORD=your_secure_password
 TZ=America/New_York
-SERVERIP=192.168.1.10
-WEBPASSWORD=your_web_password
+SERVER_IP=192.168.3.10
+INTERFACE=eth0
+VIRTUAL_HOST=pihole.local
+
+# Pi-hole Web Interface
+PIHOLE_PASSWORD=your_secure_password_here
 
 # DNS Configuration
 DNS1=1.1.1.1
 DNS2=1.0.0.1
-DNSSEC=true
+IPV6=false
 
-# Network Configuration
-INTERFACE=eth0
+# DNSMASQ Configuration
 DNSMASQ_LISTENING=local
+
+# Reverse DNS
+REV_SERVER=true
+REV_SERVER_TARGET=192.168.3.1
+REV_SERVER_DOMAIN=local
+REV_SERVER_CIDR=192.168.3.0/24
+
+# Display Settings
+TEMPERATURE_UNIT=c
+
+# Advanced DNS Settings
+DNSSEC=true
+CONDITIONAL_FORWARDING=true
+CONDITIONAL_FORWARDING_IP=192.168.3.1
+CONDITIONAL_FORWARDING_DOMAIN=local
+CONDITIONAL_FORWARDING_REVERSE=3.168.192.in-addr.arpa
+EOF
+```
+
+#### Option B: Copy from example and edit
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit with nano (or vim)
+nano .env
+
+# Make your changes:
+# - Set PIHOLE_PASSWORD to a secure password
+# - Verify SERVER_IP is 192.168.3.10
+# - Adjust timezone if needed
+# Save and exit (Ctrl+X, then Y, then Enter in nano)
+```
+
+#### Option C: Use environment variables from command line
+```bash
+# Set key variables and generate .env file
+read -s -p "Enter Pi-hole admin password: " PIHOLE_PASS
+echo
+
+cat > .env << EOF
+TZ=America/New_York
+SERVER_IP=192.168.3.10
+INTERFACE=eth0
+VIRTUAL_HOST=pihole.local
+PIHOLE_PASSWORD=${PIHOLE_PASS}
+DNS1=1.1.1.1
+DNS2=1.0.0.1
+IPV6=false
+DNSMASQ_LISTENING=local
+REV_SERVER=true
+REV_SERVER_TARGET=192.168.3.1
+REV_SERVER_DOMAIN=local
+REV_SERVER_CIDR=192.168.3.0/24
+TEMPERATURE_UNIT=c
+DNSSEC=true
+CONDITIONAL_FORWARDING=true
+CONDITIONAL_FORWARDING_IP=192.168.3.1
+CONDITIONAL_FORWARDING_DOMAIN=local
+CONDITIONAL_FORWARDING_REVERSE=3.168.192.in-addr.arpa
+EOF
+
+# Verify the file was created
+echo "Created .env file:"
+cat .env
+```
+
+#### Option D: Manual creation
+```bash
+# Use your preferred text editor to create and edit the .env file
+nano .env
+
+# Add the following content, adjusting values as necessary:
+# Pi-hole Configuration
+TZ=America/New_York
+SERVER_IP=192.168.3.10
+INTERFACE=eth0
+VIRTUAL_HOST=pihole.local
+
+# Pi-hole Web Interface
+PIHOLE_PASSWORD=your_secure_password_here
+
+# DNS Configuration
+DNS1=1.1.1.1
+DNS2=1.0.0.1
+IPV6=false
+
+# DNSMASQ Configuration
+DNSMASQ_LISTENING=local
+
+# Reverse DNS
+REV_SERVER=true
+REV_SERVER_TARGET=192.168.3.1
+REV_SERVER_DOMAIN=local
+REV_SERVER_CIDR=192.168.3.0/24
+
+# Display Settings
+TEMPERATURE_UNIT=c
+
+# Advanced DNS Settings
+DNSSEC=true
+CONDITIONAL_FORWARDING=true
+CONDITIONAL_FORWARDING_IP=192.168.3.1
+CONDITIONAL_FORWARDING_DOMAIN=local
+CONDITIONAL_FORWARDING_REVERSE=3.168.192.in-addr.arpa
 ```
 
 ### 3. Docker Compose Configuration
