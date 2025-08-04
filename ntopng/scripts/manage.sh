@@ -1,6 +1,6 @@
 #!/bin/bash
-# ntopng Service Management Script for Raspberry Pi
-# Provides common operations for managing the ntopng service
+# Network Monitoring Service Management Script for Raspberry Pi
+# Now using Netdata instead of ntopng for better ARM64 compatibility
 
 set -e
 
@@ -26,8 +26,8 @@ else
     exit 1
 fi
 
-# Use Raspberry Pi optimized configuration
-COMPOSE_FILE="-f docker-compose.yml"
+# Use Netdata instead of ntopng for better ARM64 compatibility
+COMPOSE_FILE="-f docker-compose.netdata.yml"
 
 # Functions
 log_info() {
@@ -43,41 +43,41 @@ log_error() {
 }
 
 show_status() {
-    log_info "ntopng Service Status:"
+    log_info "Netdata Service Status:"
     $DOCKER_COMPOSE $COMPOSE_FILE ps
     echo
     log_info "Service Health:"
-    $DOCKER_COMPOSE $COMPOSE_FILE exec ntopng ntopng --version 2>/dev/null || log_warn "Service may not be running"
+    $DOCKER_COMPOSE $COMPOSE_FILE exec netdata netdata -v 2>/dev/null || log_warn "Service may not be running"
 }
 
 start_service() {
-    log_info "Starting ntopng service..."
+    log_info "Starting Netdata service..."
     $DOCKER_COMPOSE $COMPOSE_FILE up -d
-    log_info "Service started. Web interface available at: http://$(hostname -I | cut -d' ' -f1):3001"
+    log_info "Service started. Web interface available at: http://$(hostname -I | cut -d' ' -f1):19999"
 }
 
 stop_service() {
-    log_info "Stopping ntopng service..."
+    log_info "Stopping Netdata service..."
     $DOCKER_COMPOSE $COMPOSE_FILE down
     log_info "Service stopped"
 }
 
 restart_service() {
-    log_info "Restarting ntopng service..."
+    log_info "Restarting Netdata service..."
     $DOCKER_COMPOSE $COMPOSE_FILE restart
     log_info "Service restarted"
 }
 
 update_service() {
-    log_info "Updating ntopng service..."
+    log_info "Updating Netdata service..."
     $DOCKER_COMPOSE $COMPOSE_FILE pull
     $DOCKER_COMPOSE $COMPOSE_FILE up -d
     log_info "Service updated"
 }
 
 view_logs() {
-    log_info "Showing ntopng logs (Ctrl+C to exit)..."
-    $DOCKER_COMPOSE $COMPOSE_FILE logs -f ntopng
+    log_info "Showing Netdata logs (Ctrl+C to exit)..."
+    $DOCKER_COMPOSE $COMPOSE_FILE logs -f netdata
 }
 
 check_network() {
@@ -110,13 +110,13 @@ check_network() {
 }
 
 cleanup_data() {
-    read -p "This will remove all ntopng data. Are you sure? (y/N): " -n 1 -r
+    read -p "This will remove all Netdata data. Are you sure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Cleaning up ntopng data..."
+        log_info "Cleaning up Netdata data..."
         $DOCKER_COMPOSE $COMPOSE_FILE down
         sudo rm -rf data/*
-        sudo rm -rf /var/log/ntopng/*
+        sudo rm -rf /var/log/netdata/*
         log_info "Data cleanup completed"
     else
         log_info "Cleanup cancelled"
@@ -124,17 +124,17 @@ cleanup_data() {
 }
 
 show_help() {
-    echo "ntopng Service Management Script for Raspberry Pi"
+    echo "Netdata Service Management Script for Raspberry Pi"
     echo
     echo "Usage: $0 [COMMAND]"
     echo
     echo "Commands:"
-    echo "  start       Start the ntopng service"
-    echo "  stop        Stop the ntopng service"
-    echo "  restart     Restart the ntopng service"
+    echo "  start       Start the Netdata service"
+    echo "  stop        Stop the Netdata service"
+    echo "  restart     Restart the Netdata service"
     echo "  status      Show service status and health"
     echo "  logs        View service logs"
-    echo "  update      Update ntopng to latest version"
+    echo "  update      Update Netdata to latest version"
     echo "  network     Check network interface configuration"
     echo "  backup      Create a backup of configuration and data"
     echo "  cleanup     Remove all data (requires confirmation)"
