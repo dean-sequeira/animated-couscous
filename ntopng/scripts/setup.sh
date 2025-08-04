@@ -20,7 +20,7 @@ fi
 echo "Using Docker Compose command: $DOCKER_COMPOSE"
 
 # Use Raspberry Pi optimized configuration
-COMPOSE_FILE="-f docker-compose.yml"
+COMPOSE_FILE="-f docker-compose.rpi.yml"
 
 # Create required directories
 echo "Creating directories..."
@@ -63,9 +63,9 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Detect which docker-compose command to use in systemd service
     if command -v docker-compose &> /dev/null; then
-        COMPOSE_CMD="$(which docker-compose) -f docker-compose.yml"
+        COMPOSE_CMD="$(which docker-compose) -f docker-compose.rpi.yml"
     else
-        COMPOSE_CMD="docker compose -f docker-compose.yml"
+        COMPOSE_CMD="docker compose -f docker-compose.rpi.yml"
     fi
 
     sudo tee /etc/systemd/system/ntopng.service > /dev/null <<EOF
