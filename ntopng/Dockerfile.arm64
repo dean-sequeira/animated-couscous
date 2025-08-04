@@ -8,7 +8,6 @@ RUN apt-get update && apt-get install -y \
     autogen \
     automake \
     libtool \
-    libtoolize \
     pkg-config \
     tar \
     zlib1g-dev \
@@ -57,25 +56,6 @@ RUN mkdir -p /var/lib/ntopng /var/log/ntopng && \
 
 # Update library cache
 RUN ldconfig
-
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y \
-    libpcap0.8 \
-    libglib2.0-0 \
-    libgeoip1 \
-    libsqlite3-0 \
-    librrd8 \
-    libcurl4 \
-    libmariadb3 \
-    libssl1.1 \
-    libzmq5 \
-    libhiredis0.14 \
-    libmaxminddb0 \
-    libjson-c5 \
-    libldap-2.4-2 \
-    libexpat1 \
-    libradcli4 \
-    && rm -rf /var/lib/apt/lists/*
 
 # Clean up build dependencies to reduce image size
 RUN apt-get remove -y \
