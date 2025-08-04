@@ -1,6 +1,15 @@
-# ntopng Traffic Monitoring Setup Instructions
+# ntopng Traffic Monitoring Setup
 
-ntopng provides real-time network traffic monitoring and analysis, offering insights into bandwidth usage, device activity, and network performance.
+ntopng provides real-time network traffic monitoring and analysis, offering insights into bandwidth usage, device activity, and network performance for your home network infrastructure.
+
+## Features
+
+- **Real-time Traffic Analysis**: Monitor network traffic in real-time
+- **Device Discovery**: Automatically discover and track network devices
+- **Bandwidth Monitoring**: Track bandwidth usage per device and application
+- **Security Alerts**: Detect suspicious network activity and security threats
+- **Historical Data**: Store and analyze historical network data
+- **Web Interface**: Easy-to-use web dashboard for monitoring
 
 ## Service Overview
 
@@ -8,6 +17,27 @@ ntopng provides real-time network traffic monitoring and analysis, offering insi
 - **Host Requirements**: Raspberry Pi with 2GB+ RAM (192.168.3.11)
 - **Dependencies**: Docker, Docker Compose
 - **Ports**: 3001 (Web Interface)
+
+## Quick Start
+
+1. **Copy and configure environment file:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your network configuration
+   ```
+
+2. **Run the setup script:**
+   ```bash
+   ./scripts/setup.sh
+   ```
+
+3. **Start the service:**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the web interface:**
+   Open http://192.168.3.11:3001 in your browser
 
 ## Pre-Installation Requirements
 
@@ -24,17 +54,19 @@ ntopng provides real-time network traffic monitoring and analysis, offering insi
 ## Directory Structure
 ```
 ntopng/
-├── docker-compose.yml
-├── .env.example
-├── .env
+├── docker-compose.yml      # Service definition
+├── .env.example           # Environment template
+├── .env                   # Your configuration (create from template)
 ├── config/
-│   ├── ntopng.conf      # Main configuration
-│   ├── categories.txt   # Traffic categories
-│   └── alerts.conf      # Alert rules
-├── data/                # Persistent data storage
+│   ├── ntopng.conf       # Main ntopng configuration
+│   ├── categories.txt    # Traffic categories
+│   └── alerts.conf       # Alert rules
+├── data/                 # Persistent data storage
+├── logs/                 # Log files
 └── scripts/
-    ├── backup.sh        # Data backup
-    └── setup.sh         # Initial setup
+    ├── setup.sh         # Initial setup script
+    ├── backup.sh        # Data backup script
+    └── manage.sh        # Service management
 ```
 
 ## Installation Steps
@@ -72,7 +104,13 @@ sudo ip link set eth0 promisc on
 echo 'pre-up ip link set $IFACE promisc on' | sudo tee -a /etc/network/interfaces
 ```
 
-## Service Configuration
+## Configuration
+
+### Network Interface
+Update the `NETWORK_INTERFACE` in your `.env` file to match your primary network interface (usually `eth0` or `wlan0`).
+
+### Local Network
+Set the `LOCAL_NETWORK` to match your subnet (e.g., `192.168.3.0/24`).
 
 ### Main Configuration File
 Create `config/ntopng.conf`:
@@ -110,6 +148,15 @@ gaming:steam.com,epicgames.com,xbox.com,playstation.com
 work:zoom.us,teams.microsoft.com,slack.com,webex.com
 ```
 
+### Alert Rules
+Modify `config/alerts.conf` to configure network alerts and thresholds.
+
+## Network Requirements
+
+- **Promiscuous Mode**: The network interface must support promiscuous mode
+- **Port Mirroring**: For complete traffic visibility, configure port mirroring on your router/switch
+- **Static IP**: Recommended to use a static IP address for the monitoring host
+
 ## Service Management
 
 ### Start Service
@@ -122,6 +169,26 @@ docker-compose up -d
 ```bash
 docker-compose ps
 docker-compose logs ntopng
+```
+
+### Using Management Script
+```bash
+# Start/stop/restart service
+./scripts/manage.sh start
+./scripts/manage.sh stop
+./scripts/manage.sh restart
+
+# Check status and health
+./scripts/manage.sh status
+
+# View logs
+./scripts/manage.sh logs
+
+# Update to latest version
+./scripts/manage.sh update
+
+# Check network configuration
+./scripts/manage.sh network
 ```
 
 ### Monitor Performance
@@ -167,6 +234,24 @@ Create `config/alerts.conf`:
 --threshold-cross=external_traffic:>:500MB/min
 ```
 
+## Maintenance
+
+### Backup Data
+```bash
+./scripts/backup.sh
+```
+
+### View Logs
+```bash
+docker-compose logs -f ntopng
+```
+
+### Update Service
+```bash
+docker-compose pull
+docker-compose up -d
+```
+
 ## Data Management
 
 ### Retention Policy
@@ -192,6 +277,40 @@ tar -czf "$BACKUP_DIR/ntopng-data-$DATE.tar.gz" \
 
 # Keep only last 7 days
 find $BACKUP_DIR -name "ntopng-data-*.tar.gz" -mtime +7 -delete
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **No traffic visible**: Ensure promiscuous mode is enabled and port mirroring is configured
+2. **Permission errors**: Run the setup script to fix directory permissions
+3. **High CPU usage**: Reduce logging level in ntopng.conf
+4. **Storage issues**: Configure log rotation and data retention policies
+
+### Enable Promiscuous Mode
+```bash
+sudo ip link set eth0 promisc on
+```
+
+### Check Interface Status
+```bash
+ip link show eth0
+```
+
+### Debug Commands
+```bash
+# Check interface status
+ip link show eth0
+
+# Monitor network traffic
+sudo tcpdump -i eth0 -c 100
+
+# Check ntopng logs
+docker-compose logs -f ntopng
+
+# Verify data directory permissions
+ls -la /home/pi/animated-couscous/ntopng/data
 ```
 
 ## Advanced Features
@@ -238,29 +357,6 @@ memswap_limit: 1g
 - Use dedicated network interface for monitoring
 - Configure network card offloading features
 - Optimize buffer sizes for high-traffic networks
-
-## Troubleshooting
-
-### Common Issues
-1. **No traffic visible**: Check interface promiscuous mode
-2. **High memory usage**: Adjust flow limits and retention
-3. **Missing data**: Verify network connectivity and permissions
-4. **Slow web interface**: Check system resources and database size
-
-### Debug Commands
-```bash
-# Check interface status
-ip link show eth0
-
-# Monitor network traffic
-sudo tcpdump -i eth0 -c 100
-
-# Check ntopng logs
-docker-compose logs -f ntopng
-
-# Verify data directory permissions
-ls -la /home/pi/animated-couscous/ntopng/data
-```
 
 ## Security Considerations
 
