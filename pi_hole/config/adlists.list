@@ -4,9 +4,6 @@
 # StevenBlack's unified hosts file (recommended baseline)
 https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
 
-# Malware domains
-https://mirror1.malwaredomains.com/files/justdomains
-
 # Disconnect.me tracking protection
 https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 
