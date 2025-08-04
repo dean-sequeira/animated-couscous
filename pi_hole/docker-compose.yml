@@ -8,6 +8,8 @@ services:
       - "53:53/tcp"
       - "53:53/udp"
       - "80:80/tcp"
+      - "67:67/udp"    # DHCP server
+      - "68:68/udp"    # DHCP client
     environment:
       TZ: ${TZ:-America/New_York}
       WEBPASSWORD: ${PIHOLE_PASSWORD:-}
@@ -54,6 +56,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    network_mode: "host"  # Required for DHCP to work properly
 
 networks:
   monitoring_network:

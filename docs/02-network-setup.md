@@ -205,3 +205,31 @@ After network setup:
 3. Test connectivity between all services
 4. Deploy monitoring to verify network health
 5. Document any custom router-specific configurations
+
+# DHCP Server Configuration (if Pi will handle DHCP)
+# This section is only needed if you disable DHCP on your router
+# and want the Pi to manage IP assignments
+
+### Option A: Router DHCP with Pi-hole DNS (Recommended)
+```bash
+# Router Configuration (access via web interface):
+# 1. Set Primary DNS to 192.168.3.10 (Pi-hole)
+# 2. Set Secondary DNS to 8.8.8.8 or 1.1.1.1
+# 3. Create DHCP reservation for Pi: MAC -> 192.168.3.10
+# 4. Keep router DHCP enabled
+```
+
+### Option B: Pi-hole as DHCP Server (Advanced)
+```bash
+# If you want to disable router DHCP and use Pi-hole instead:
+
+# 1. First, configure Pi-hole to handle DHCP via web interface:
+#    - Go to Settings > DHCP
+#    - Enable DHCP server
+#    - Set range: 192.168.3.100 to 192.168.3.254
+#    - Set router IP: 192.168.3.1
+#    - Set domain name: local
+
+# 2. Then disable DHCP on your router
+# 3. Restart all network devices to get new IP assignments
+```

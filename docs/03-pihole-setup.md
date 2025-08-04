@@ -158,6 +158,80 @@ docker compose exec pihole pihole setpassword
 docker compose exec pihole pihole status
 ```
 
+## Option B: Pi-hole as DHCP Server Setup
+
+**⚠️ Important**: This will make your Pi the DHCP server for your entire network. Ensure the Pi is stable and always powered on.
+
+### Step 1: Update Firewall Rules
+```bash
+# Allow DHCP traffic on the Pi
+sudo ufw allow 67/udp    # DHCP server
+sudo ufw allow 68/udp    # DHCP client
+
+# Verify firewall rules
+sudo ufw status
+```
+
+### Step 2: Deploy Updated Pi-hole
+```bash
+# Stop current Pi-hole service
+docker compose down
+
+# Start with updated configuration (includes host networking for DHCP)
+docker compose up -d
+
+# Check that Pi-hole is running
+docker compose ps
+docker compose logs pihole
+```
+
+### Step 3: Configure Pi-hole DHCP via Web Interface
+```bash
+# Access Pi-hole admin: http://192.168.3.10/admin
+# 1. Go to Settings → DHCP
+# 2. Check "DHCP server enabled"
+# 3. Configure DHCP settings:
+#    - From: 192.168.3.100
+#    - To: 192.168.3.254
+#    - Router (gateway) IP: 192.168.3.1
+#    - Domain name: local
+#    - Lease time: 24 hours
+# 4. Click "Save"
+```
+
+### Step 4: Disable Router DHCP
+```bash
+# Access your router's admin interface (usually http://192.168.3.1)
+# Look for DHCP settings and disable DHCP server
+# Save/Apply settings
+```
+
+### Step 5: Restart Network Devices
+```bash
+# On all devices (phones, computers, etc.), either:
+# - Disconnect and reconnect to WiFi
+# - Restart the device
+# - Or run: sudo dhclient -r && sudo dhclient (on Linux devices)
+
+# Verify Pi got correct IP:
+ip addr show eth0
+# Should show 192.168.3.10
+
+# Test that Pi-hole is handling DHCP:
+docker compose exec pihole cat /var/log/pihole.log | grep DHCP
+```
+
+### Step 6: Verify Everything Works
+```bash
+# Test DNS resolution and blocking
+dig @192.168.3.10 google.com
+dig @192.168.3.10 doubleclick.net  # Should be blocked
+
+# Check DHCP leases in Pi-hole admin interface
+# Go to Tools → Network Overview
+# You should see all devices getting IPs from 192.168.3.100+
+```
+
 ## Service Management
 
 ### Start Service
