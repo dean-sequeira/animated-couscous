@@ -1,0 +1,68 @@
+FROM arm64v8/debian:bullseye-slim
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    autotools-dev \
+    autogen \
+    automake \
+    pkg-config \
+    tar \
+    zlib1g-dev \
+    libpcap-dev \
+    libglib2.0-dev \
+    libgeoip-dev \
+    libsqlite3-dev \
+    librrd-dev \
+    libcurl4-openssl-dev \
+    libmysqlclient-dev \
+    wget \
+    libssl-dev \
+    libzmq3-dev \
+    libhiredis-dev \
+    libmaxminddb-dev \
+    libjson-c-dev \
+    libldap2-dev \
+    libexpat1-dev \
+    libradcli-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create ntopng user
+RUN useradd -r -s /bin/false ntopng
+
+# Build and install ndpi
+WORKDIR /tmp
+RUN git clone https://github.com/ntop/nDPI.git && \
+    cd nDPI && \
+    ./autogen.sh && \
+    ./configure && \
+    make && \
+    make install
+
+# Build and install ntopng
+RUN git clone https://github.com/ntop/ntopng.git && \
+    cd ntopng && \
+    ./autogen.sh && \
+    ./configure --with-ndpi-includes=/usr/local/include/ndpi --with-ndpi-libs=/usr/local/lib && \
+    make && \
+    make install
+
+# Create necessary directories
+RUN mkdir -p /var/lib/ntopng /var/log/ntopng && \
+    chown -R ntopng:ntopng /var/lib/ntopng /var/log/ntopng
+
+# Update library cache
+RUN ldconfig
+
+# Set working directory
+WORKDIR /var/lib/ntopng
+
+# Expose port
+EXPOSE 3000
+
+# Run as ntopng user
+USER ntopng
+
+# Default command
+CMD ["ntopng", "--help"]

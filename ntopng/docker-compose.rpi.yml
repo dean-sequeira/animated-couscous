@@ -2,8 +2,10 @@ version: '3.8'
 
 services:
   ntopng:
-    # Use a proven ARM-compatible image
-    image: lucashalbert/ntopng:latest
+    # Build from source for ARM64 compatibility
+    build:
+      context: .
+      dockerfile: Dockerfile.arm64
     container_name: ntopng
     restart: unless-stopped
     network_mode: host
@@ -28,12 +30,13 @@ services:
       - /var/log/ntopng:/var/log/ntopng
     ports:
       - "3001:3000"
+    user: "0:0"  # Run as root to access network interfaces
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s  # Allow more time for first startup
     logging:
       driver: "json-file"
       options:
